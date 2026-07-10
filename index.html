@@ -11,12 +11,13 @@
     <script type="py">
         import urllib.request
         import json
+        from js import prompt  # Import browser prompt to avoid main thread input() block
 
         # Split API key to bypass GitHub scanner
         api_key = "AQ." + "Ab8RN6IAc8s55CP_19A_3F586MwdkDklPWt8p5dG_acESRZWRA"
 
-        # input() opens a browser prompt in PyScript
-        paragraph = input("Enter paragraph:")
+        # Show prompt dialog using browser JS API
+        paragraph = prompt("Enter paragraph:")
 
         if paragraph:
             print("Loading...")
