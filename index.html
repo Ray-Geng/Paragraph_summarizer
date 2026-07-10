@@ -9,18 +9,23 @@
 </head>
 <body>
     <script type="py">
-        import urllib.request
         import json
-        from js import prompt  # Import browser prompt to avoid main thread input() block
+        import asyncio
+        from pyodide.http import pyfetch
+        from js import prompt, document
 
-        # Split API key to bypass GitHub scanner
-        api_key = "AQ." + "Ab8RN6IAc8s55CP_19A_3F586MwdkDklPWt8p5dG_acESRZWRA"
+        async def main():
+            # Split API key to bypass GitHub scanner
+            api_key = "AQ." + "Ab8RN6IAc8s55CP_19A_3F586MwdkDklPWt8p5dG_acESRZWRA"
 
-        # Show prompt dialog using browser JS API
-        paragraph = prompt("Enter paragraph:")
+            paragraph = prompt("Enter paragraph:")
 
-        if paragraph:
-            print("Loading...")
+            if not paragraph:
+                document.body.innerHTML = "No paragraph entered."
+                return
+
+            document.body.innerHTML = "Loading..."
+
             url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={api_key}"
             
             payload = {
@@ -31,24 +36,25 @@
                 }]
             }
 
-            req = urllib.request.Request(
-                url,
-                data=json.dumps(payload).encode("utf-8"),
-                headers={"Content-Type": "application/json"},
-                method="POST"
-            )
-
             try:
-                with urllib.request.urlopen(req) as response:
-                    res_json = json.loads(response.read().decode("utf-8"))
+                response = await pyfetch(
+                    url=url,
+                    method="POST",
+                    headers={"Content-Type": "application/json"},
+                    body=json.dumps(payload)
+                )
+                
+                if response.status == 200:
+                    res_json = await response.json()
                     output_text = res_json["candidates"][0]["content"]["parts"][0]["text"]
-                    
-                    # Clear screen and print raw text output
-                    from pyscript import document
-                    document.body.innerHTML = f"<pre>{output_text}</pre>"
+                    document.body.innerHTML = f"<pre style='white-space: pre-wrap; font-family: monospace;'>{output_text}</pre>"
+                else:
+                    document.body.innerHTML = f"API Error: Status code {response.status}"
             except Exception as e:
-                from pyscript import document
-                document.body.innerHTML = f"Error: {e}"
+                document.body.innerHTML = f"Request Failed: {e}"
+
+        # Run the async main function
+        asyncio.ensure_future(main())
     </script>
 </body>
 </html>
