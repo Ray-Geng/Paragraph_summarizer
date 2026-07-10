@@ -1,13 +1,20 @@
 const MODEL_NAME = "gemini-2.5-flash";
 
+// PDF.js configuration
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+
 const apiKeyInput = document.getElementById('api-key-input');
 const paragraphInput = document.getElementById('paragraph-input');
 const charCounter = document.getElementById('char-counter');
 const analyzeBtn = document.getElementById('analyze-btn');
 const loadingState = document.getElementById('loading-state');
+const loadingText = document.getElementById('loading-text');
 const errorAlert = document.getElementById('error-alert');
 const errorMessage = document.getElementById('error-message');
 const outputSection = document.getElementById('output-section');
+
+const dropzone = document.getElementById('dropzone');
+const fileInput = document.getElementById('file-input');
 
 const summaryContent = document.getElementById('summary-content');
 const keywordsContent = document.getElementById('keywords-content');
@@ -26,6 +33,73 @@ paragraphInput.addEventListener('input', () => {
     charCounter.textContent = `${count.toLocaleString()} character${count !== 1 ? 's' : ''}`;
 });
 
+// PDF Drag & Drop listeners
+dropzone.addEventListener('click', () => fileInput.click());
+
+dropzone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropzone.classList.add('dragover');
+});
+
+dropzone.addEventListener('dragleave', () => {
+    dropzone.classList.remove('dragover');
+});
+
+dropzone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropzone.classList.remove('dragover');
+    if (e.dataTransfer.files.length > 0) {
+        handleFile(e.dataTransfer.files[0]);
+    }
+});
+
+fileInput.addEventListener('change', (e) => {
+    if (e.target.files.length > 0) {
+        handleFile(e.target.files[0]);
+    }
+});
+
+async function handleFile(file) {
+    if (file.type !== 'application/pdf') {
+        showError('Please upload a PDF file.');
+        return;
+    }
+
+    hideError();
+    loadingState.classList.remove('hidden');
+    loadingText.textContent = 'Extracting text from PDF...';
+    analyzeBtn.disabled = true;
+
+    try {
+        const arrayBuffer = await file.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        let textContent = '';
+        
+        for (let i = 1; i <= pdf.numPages; i++) {
+            const page = await pdf.getPage(i);
+            const content = await page.getTextContent();
+            const pageText = content.items.map(item => item.str).join(' ');
+            textContent += pageText + '\n\n';
+        }
+
+        if (!textContent.trim()) {
+            throw new Error('No text content found in PDF.');
+        }
+
+        paragraphInput.value = textContent;
+        // Trigger character counter update
+        paragraphInput.dispatchEvent(new Event('input'));
+        
+    } catch (err) {
+        console.error(err);
+        showError('Error reading PDF: ' + err.message);
+    } finally {
+        loadingState.classList.add('hidden');
+        loadingText.textContent = 'Analyzing with Gemini 2.5 Flash...';
+        analyzeBtn.disabled = false;
+    }
+}
+
 analyzeBtn.addEventListener('click', async () => {
     const apiKey = apiKeyInput.value.trim();
     const text = paragraphInput.value.trim();
@@ -37,7 +111,7 @@ analyzeBtn.addEventListener('click', async () => {
     }
 
     if (!text) {
-        showError("Please enter a paragraph to analyze.");
+        showError("Please enter a paragraph or upload a PDF to analyze.");
         paragraphInput.focus();
         return;
     }
@@ -60,7 +134,7 @@ analyzeBtn.addEventListener('click', async () => {
             body: JSON.stringify({
                 contents: [{
                     parts: [{
-                        text: `You are an AI learning assistant. Analyze the following paragraph.
+                        text: `You are an AI learning assistant. Analyze the following paragraph/text.
                         Generate:
                         1. A simple summary.
                         2. 3-5 keywords.
@@ -75,7 +149,7 @@ analyzeBtn.addEventListener('click', async () => {
                             "learning_steps": ["step1", "step2", "step3"]
                         }
 
-                        Here is the paragraph:
+                        Here is the content:
                         ${text}`
                     }]
                 }],
@@ -154,7 +228,6 @@ function showError(msg) {
     errorAlert.classList.remove('hidden');
 }
 
-// Helper to hide error alert
 function hideError() {
     errorAlert.classList.add('hidden');
 }

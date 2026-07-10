@@ -153,6 +153,49 @@ input[type="password"]:focus {
     color: var(--text-secondary);
 }
 
+/* Dropzone (PDF Upload) */
+.dropzone {
+    border: 2px dashed var(--border-card);
+    border-radius: var(--radius-md);
+    padding: 1.5rem;
+    text-align: center;
+    cursor: pointer;
+    background: rgba(0, 0, 0, 0.15);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    transition: var(--transition);
+}
+
+.dropzone:hover, .dropzone.dragover {
+    border-color: var(--accent);
+    background: rgba(99, 102, 241, 0.04);
+}
+
+.upload-icon {
+    width: 32px;
+    height: 32px;
+    color: var(--text-secondary);
+    transition: var(--transition);
+}
+
+.dropzone:hover .upload-icon {
+    color: var(--accent);
+    transform: translateY(-2px);
+}
+
+.dropzone-text {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.browse-link {
+    color: var(--accent);
+    font-weight: 600;
+    text-decoration: underline;
+}
+
 /* Input Section */
 .input-section {
     display: flex;

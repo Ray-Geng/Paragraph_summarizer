@@ -3,13 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Paragraph Analyzer</title>
-    <meta name="description" content="A simple tool to summarize paragraphs, extract keywords, and generate learning questions using Gemini.">
+    <title>AI Paragraph & PDF Analyzer</title>
+    <meta name="description" content="A simple tool to summarize paragraphs or PDFs, extract keywords, and generate learning questions using Gemini.">
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <!-- PDF.js CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
 </head>
 <body>
     <div class="glass-bg"></div>
@@ -17,9 +19,9 @@
         <header class="header">
             <div class="logo-area">
                 <span class="logo-dot"></span>
-                <h1>Paragraph Analyzer</h1>
+                <h1>Paragraph & PDF Analyzer</h1>
             </div>
-            <p class="subtitle">Extract insights, keywords, questions, and learning steps instantly.</p>
+            <p class="subtitle">Extract insights, keywords, questions, and learning steps from text or documents.</p>
         </header>
 
         <!-- API Key Configuration -->
@@ -35,12 +37,23 @@
         <!-- Main Input -->
         <section class="card input-section">
             <div class="input-header">
-                <label for="paragraph-input">Enter your paragraph below</label>
+                <label for="paragraph-input">Enter text or upload a PDF</label>
                 <span class="char-counter" id="char-counter">0 characters</span>
             </div>
-            <textarea id="paragraph-input" placeholder="Paste or type your paragraph here..."></textarea>
+            
+            <!-- File Upload Dropzone -->
+            <div class="dropzone" id="dropzone">
+                <svg class="upload-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <p class="dropzone-text">Drag & drop a PDF here, or <span class="browse-link">browse</span></p>
+                <input type="file" id="file-input" accept=".pdf" class="hidden" />
+            </div>
+
+            <textarea id="paragraph-input" placeholder="Or paste/type your text here..."></textarea>
+            
             <button id="analyze-btn" class="btn-primary">
-                <span>Analyze Paragraph</span>
+                <span>Analyze Content</span>
                 <svg class="btn-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M5 12H19M19 12L13 6M19 12L13 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
@@ -50,7 +63,7 @@
         <!-- Loading State -->
         <div id="loading-state" class="loading-container hidden">
             <div class="spinner"></div>
-            <p>Analyzing with Gemini 2.5 Flash...</p>
+            <p id="loading-text">Analyzing with Gemini 2.5 Flash...</p>
         </div>
 
         <!-- Error Alert -->
