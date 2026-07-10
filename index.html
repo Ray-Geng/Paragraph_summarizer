@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Paragraph Analyzer</title>
+    <meta name="description" content="A simple tool to summarize paragraphs, extract keywords, and generate learning questions using Gemini.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="glass-bg"></div>
+    <main class="container">
+        <header class="header">
+            <div class="logo-area">
+                <span class="logo-dot"></span>
+                <h1>Paragraph Analyzer</h1>
+            </div>
+            <p class="subtitle">Extract insights, keywords, questions, and learning steps instantly.</p>
+        </header>
+
+        <!-- API Key Configuration -->
+        <section class="card config-section">
+            <div class="input-header">
+                <label for="api-key-input">Gemini API Key</label>
+                <a href="https://aistudio.google.com/app/apikey" target="_blank" class="helper-link">Get a free key here</a>
+            </div>
+            <input type="password" id="api-key-input" placeholder="Paste your Gemini API Key here (starts with AIza...)" />
+            <p class="key-status-text">Your key is stored locally in your browser and never sent to any server other than Google.</p>
+        </section>
+
+        <!-- Main Input -->
+        <section class="card input-section">
+            <div class="input-header">
+                <label for="paragraph-input">Enter your paragraph below</label>
+                <span class="char-counter" id="char-counter">0 characters</span>
+            </div>
+            <textarea id="paragraph-input" placeholder="Paste or type your paragraph here..."></textarea>
+            <button id="analyze-btn" class="btn-primary">
+                <span>Analyze Paragraph</span>
+                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M5 12H19M19 12L13 6M19 12L13 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </button>
+        </section>
+
+        <!-- Loading State -->
+        <div id="loading-state" class="loading-container hidden">
+            <div class="spinner"></div>
+            <p>Analyzing with Gemini 2.5 Flash...</p>
+        </div>
+
+        <!-- Error Alert -->
+        <div id="error-alert" class="error-alert hidden">
+            <svg class="error-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                <path d="M12 8V12M12 16H12.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span id="error-message">An error occurred. Please try again.</span>
+        </div>
+
+        <!-- Output Section -->
+        <section id="output-section" class="output-section hidden">
+            <div class="output-grid">
+                <div class="card result-card summary-card">
+                    <div class="card-header">
+                        <svg class="card-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M9 12H15M9 16H13M17 21H7C5.89543 21 5 20.1046 5 19V5C5 3.89543 5.89543 3 7 3H12.5858C12.851 3 13.1054 3.10536 13.2929 3.29289L18.7071 8.70711C18.8946 8.89464 19 9.149 19 9.41421V19C19 20.1046 18.1046 21 17 21Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <h2>Summary</h2>
+                    </div>
+                    <p id="summary-content" class="result-text"></p>
+                </div>
+
+                <div class="card result-card keywords-card">
+                    <div class="card-header">
+                        <svg class="card-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M7 20L11 4M13 20L17 4M6 9H20M4 15H18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <h2>Key Words</h2>
+                    </div>
+                    <div id="keywords-content" class="tags-container"></div>
+                </div>
+
+                <div class="card result-card questions-card">
+                    <div class="card-header">
+                        <svg class="card-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <h2>Questions to Ponder</h2>
+                    </div>
+                    <ul id="questions-content" class="list-container"></ul>
+                </div>
+
+                <div class="card result-card steps-card">
+                    <div class="card-header">
+                        <svg class="card-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M13 10V3L4 14H11V21L20 10H13Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <h2>Next Learning Steps</h2>
+                    </div>
+                    <ul id="steps-content" class="list-container learning-steps"></ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer Area -->
+        <footer class="footer">
+            <p>Powered by Gemini 2.5 Flash.</p>
+        </footer>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>
